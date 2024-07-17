@@ -1,0 +1,25 @@
+services: 
+  ms_users: 
+    image: node:20-alpine
+    volumes: 
+      - ./user_ms:/app/
+    working_dir: /app
+    ports:
+      - "8000:3000"
+    command: "npm run start"
+    environment: 
+      - MONGO_URL=mongodb://users-db:27017/demo
+  
+    depends_on: 
+      - users-db
+
+  users-db:
+    image: mongo:latest
+    ports: 
+      - "27017:27017"
+    restart: always
+    environment: 
+      MONGO_INITDB_DATABASE: demo
+    volumes: 
+      - /data/db
+      - ./init-users.js:/docker-entrypoint-initdb.d/init-users.js:ro
