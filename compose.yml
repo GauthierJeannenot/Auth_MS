@@ -2,13 +2,13 @@ services:
   ms_users: 
     image: node:20-alpine
     volumes: 
-      - ./user_ms:/app/
+      - ./user_ms:/app
     working_dir: /app
     ports:
       - "8000:3000"
     command: "npm run start"
     environment: 
-      - MONGO_URL=mongodb://users-db:27017/demo
+      - MONGO_URL=mongodb://users-db:27017/users
   
     depends_on: 
       - users-db
@@ -19,7 +19,57 @@ services:
       - "27017:27017"
     restart: always
     environment: 
-      MONGO_INITDB_DATABASE: demo
+      MONGO_INITDB_DATABASE: users
     volumes: 
       - /data/db
       - ./init-users.js:/docker-entrypoint-initdb.d/init-users.js:ro
+
+
+  ms_token: 
+    image: node:20-alpine
+    volumes: 
+      - ./token_ms:/app
+    working_dir: /app
+    ports:
+      - "8002:3000"
+    command: "npm run start"
+    environment: 
+      - JWT_SECRET=${JWT_SECRET}
+
+  ms_authn: 
+    image: node:20-alpine
+    volumes: 
+      - ./authn_ms:/app
+    working_dir: /app
+    ports:
+      - "8001:3000"
+    command: "npm run start"
+    environment: 
+      - MONGO_URL=mongodb://users-db:27017/users
+      - TOKEN_MS_URL=http://ms_token:3000
+    depends_on: 
+      - users-db
+
+  ms_posts:
+    image: node:20-alpine
+    volumes:
+      - ./posts_ms:/app
+    working_dir: /app
+    ports:
+     - "8003:3000"
+    command: "npm run start"
+    environment:
+      - MONGO_URL=mongodb://posts-db:27017/posts
+    depends_on:
+      - posts-db
+
+  posts-db:
+    image: mongo:latest
+    ports: 
+      - "27018:27017"
+    restart: always
+    environment: 
+      MONGO_INITDB_DATABASE: posts
+    volumes:
+      - /data/db
+      - ./init-posts.js:/docker-entrypoint-initdb.d/init-posts.js:ro

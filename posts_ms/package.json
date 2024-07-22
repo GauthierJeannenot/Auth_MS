@@ -1,0 +1,17 @@
+{
+  "name": "user_ms",
+  "main": "index.ts",
+  "scripts": {
+    "start": "ts-node index.ts"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.4.5"
+  },
+  "dependencies": {
+    "body-parser": "^1.20.2",
+    "express": "^4.19.2",
+    "mongoose": "^8.4.3"
+  }
+}
