@@ -1,11 +1,32 @@
 import bodyParser from "body-parser";
-import express from "express";
+import express, { NextFunction } from "express";
 import { Request, Response } from 'express';
-import { Post } from "./Model/Posts";
+import { IPost, Post } from "./Model/Posts";
+import got from 'got-cjs';
 
 const app = express()
 const port = 3000
 
+const tokenUrl: string = process.env.TOKEN_MS_URL || "";
+
+interface VerifyTokenResponse {
+    username: string
+}
+
+interface AuthenticateResponse {
+    role: string
+}
+
+app.use(async(req: Request, res: Response, next: NextFunction) => {
+    const rawToken = req.params.authorization
+    if (!rawToken) res.status(403).json({ message: "Please Log in" })
+
+    const authZHeader = { Authorization: rawToken }
+    const resAuthenticate= await got.post(`${tokenUrl}/authenticate`, { headers: authZHeader }).json() as AuthenticateResponse
+    const { role } = resAuthenticate
+    if (role !== "User") res.status(403).json({ message: "Please Log in" })
+    next()
+})
 
 
 app.get('/posts', (req: Request, res: Response) => {
@@ -32,6 +53,31 @@ app.get('/posts/:author', async(req: Request, res: Response) => {
     }
     
 })
+
+app.post('/post', async(req: Request, res: Response) => {
+    const rawToken = req.params.authorization
+    const authZHeader = { Authorization: rawToken }
+
+    const postBody = req.body
+
+    try {
+        const resVerifyToken= await got.get(`${tokenUrl}/verify`, { headers: authZHeader }).json() as VerifyTokenResponse
+        const postAuthor = resVerifyToken.username
+
+        const newPost: Promise<Response<IPost>> = Post.create({
+            Author: postAuthor,
+            Body: postBody
+        }).then(()=>{
+            return res.status(200).json({newPost})
+        })
+        
+    } catch (error) {
+        console.log(error)
+        return res.status(500).json({message: "Couldn't post the post"})
+    }
+})
+
+
 
 app.listen(port, ()=> {
     console.log(`posts_ms listening on port:${port}`)
