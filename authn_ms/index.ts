@@ -12,9 +12,10 @@ const app = express();
 app.use(bodyParser.json());
 
 app.post('/authenticate', async(req: Request, res: Response) => {
-    const rawToken = req.params.authorization
+    const rawToken = req.headers.authorization
+    console.log(rawToken)
     if (!rawToken) res.status(200).json({ role: 'Guest' })
-    const token = rawToken.split('Bearer ')[1]
+    
 
     const authZHeader = { Authorization: rawToken }
     try {

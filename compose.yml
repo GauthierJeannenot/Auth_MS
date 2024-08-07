@@ -8,10 +8,17 @@ services:
       - "8000:3000"
     command: "npm run start"
     environment: 
+      - REDIS_URL=redis://users_redis:6379
       - MONGO_URL=mongodb://users-db:27017/users
   
     depends_on: 
       - users-db
+      - users_redis
+
+  users_redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
 
   users-db:
     image: mongo:latest
@@ -60,6 +67,7 @@ services:
     command: "npm run start"
     environment:
       - MONGO_URL=mongodb://posts-db:27017/posts
+      - TOKEN_MS_URL=http://ms_token:3000
     depends_on:
       - posts-db
 
